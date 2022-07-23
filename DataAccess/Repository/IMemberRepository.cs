@@ -14,7 +14,7 @@ namespace DataAccess
         Member GetMemberByEmail(string email);
         Boolean UpdateMember(Member member);
         IEnumerable<Member> GetAllMember();
-        Boolean DeleteMember(Member member);
+        Boolean DeleteMember(Member  member);
         Boolean AddMember(Member member);
         Member GetMemberByID(int? memberId);
     }
