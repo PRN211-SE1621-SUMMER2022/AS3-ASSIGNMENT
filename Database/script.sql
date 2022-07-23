@@ -1,6 +1,7 @@
 USE [master]
+CREATE DATABASE [SaleManagementDB]
 GO
-
+CREATE DATABASE [SaleManagementDB]
 ALTER DATABASE [SaleManagementDB] SET ANSI_NULL_DEFAULT OFF 
 GO
 ALTER DATABASE [SaleManagementDB] SET ANSI_NULLS OFF 
@@ -128,13 +129,13 @@ CREATE TABLE [dbo].[Product](
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
-INSERT [dbo].[Member] ([MemberId], [Email], [CompanyName], [City], [Country], [Password]) VALUES (1, N'user@fstore.com', N'FPT', N'HCM', N'VN', N'user@')
-GO
+
+GO 
 INSERT [dbo].[Member] ([MemberId], [Email], [CompanyName], [City], [Country], [Password]) VALUES (3, N'hungpd@fpt.edu.vn', N'FPT', N'HCM', N'VN', N'hung')
 GO
 INSERT [dbo].[Member] ([MemberId], [Email], [CompanyName], [City], [Country], [Password]) VALUES (4, N'anhtt@fpt.edu.vn', N'FPT', N'HCM', N'VN', N'anh')
 GO
-INSERT [dbo].[Member] ([MemberId], [Email], [CompanyName], [City], [Country], [Password]) VALUES (21, N'hungtq@fpt.edu.vn', N'FPT', N'HCM', N'VN', N'hung')
+
 GO
 INSERT [dbo].[Order] ([OrderId], [MemberId], [OrderDate], [RequiredDate], [ShippedDate], [Freight]) VALUES (1, 1, CAST(N'2022-04-03T00:00:00.000' AS DateTime), CAST(N'2022-05-06T00:00:00.000' AS DateTime), CAST(N'2022-04-04T00:00:00.000' AS DateTime), 2020.0000)
 GO
