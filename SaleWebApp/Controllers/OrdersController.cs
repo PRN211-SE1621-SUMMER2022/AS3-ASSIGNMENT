@@ -19,9 +19,18 @@ namespace SaleWebApp.Controllers
         }
 
         // GET: OrdersController/Details/5
-        public ActionResult Details(int id)
+        public ActionResult Details(int? id)
         {
-            return View();
+            if (id == null)
+            {
+                return NotFound();
+            }
+            var order = orderRepository.GetOrderByID(id.Value);
+            if(order == null)
+            {
+                return NotFound();
+            }
+            return View(order);
         }
 
         // GET: OrdersController/Create
