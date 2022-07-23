@@ -1,19 +1,20 @@
-﻿using BusinessObject.Models;
-using DataAccess.Repository;
+﻿using DataAccess.Repository;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
-namespace eStore
+namespace SaleWebApp.Controllers
 {
     public class OrdersController : Controller
     {
+        // GET: OrdersController
         IOrderRepository orderRepository = null;
         public OrdersController() => orderRepository = new OrderRepository();
-        // GET: OrdersController
+
         public ActionResult Index()
         {
             var orderList = orderRepository.GetAllOrder();
             return View(orderList);
+
         }
 
         // GET: OrdersController/Details/5
@@ -23,7 +24,10 @@ namespace eStore
         }
 
         // GET: OrdersController/Create
-        public ActionResult Create() => View();
+        public ActionResult Create()
+        {
+            return View();
+        }
 
         // POST: OrdersController/Create
         [HttpPost]
@@ -38,14 +42,16 @@ namespace eStore
                 }
                 return RedirectToAction(nameof(Index));
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 ViewBag.Message = ex.Message;
                 return View(order);
             }
         }
 
+
         // GET: OrdersController/Edit/5
+
         public ActionResult Edit(int? id)
         {
             if (id != null)
@@ -53,12 +59,14 @@ namespace eStore
                 return NotFound();
             }
             var order = orderRepository.GetOrderByID(id.Value);
-            if(order == null)
+            if (order == null)
             {
                 return NotFound();
             }
             return View(order);
         }
+
+
 
         // POST: OrdersController/Edit/5
         [HttpPost]
@@ -67,7 +75,7 @@ namespace eStore
         {
             try
             {
-                if(id != order.Id)
+                if (id != order.Id)
                 {
                     return NotFound();
                 }
@@ -77,7 +85,7 @@ namespace eStore
                 }
                 return RedirectToAction(nameof(Index));
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 ViewBag.Message = ex.Message;
                 return View();
@@ -87,17 +95,18 @@ namespace eStore
         // GET: OrdersController/Delete/5
         public ActionResult Delete(int? id)
         {
-            if(id == null)
+            if (id == null)
             {
                 return NotFound();
             }
             var order = orderRepository.GetOrderByID(id.Value);
-            if(order == null)
+            if (order == null)
             {
                 return NotFound();
             }
-           return View(order);
+            return View(order);
         }
+
 
         // POST: OrdersController/Delete/5
         [HttpPost]
@@ -109,7 +118,7 @@ namespace eStore
                 orderRepository.DeleteOrder(order);
                 return RedirectToAction(nameof(Index));
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 ViewBag.Message = ex.Message;
                 return View();
