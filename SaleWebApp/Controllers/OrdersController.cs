@@ -1,4 +1,5 @@
-﻿using DataAccess.Repository;
+﻿using BusinessObject.Models;
+using DataAccess.Repository;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -24,10 +25,8 @@ namespace SaleWebApp.Controllers
         }
 
         // GET: OrdersController/Create
-        public ActionResult Create()
-        {
-            return View();
-        }
+        public ActionResult Create() => View();
+        
 
         // POST: OrdersController/Create
         [HttpPost]
