@@ -1,10 +1,6 @@
 ﻿using BusinessObject.Models;
 using DataAccess.Repository;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 
 namespace DataAccess
 {
@@ -32,7 +28,7 @@ namespace DataAccess
         }
         public void DeleteOrderDetail(OrderDetail orderDetail) => base.DeleteEntity(orderDetail);
 
-        public IEnumerable<OrderDetail> GetAllOrderDetail(int orderID) => salesManagementContext.OrderDetails.Where(o => o.OrderId==orderID).ToList();
+        public IEnumerable<OrderDetail> GetAllOrderDetail(int orderID) => salesManagementContext.OrderDetails.Where(o => o.OrderId == orderID).ToList();
 
         public OrderDetail GetOrderDetailByID(int orderID, int productID) => salesManagementContext.OrderDetails.Where(o => o.OrderId == orderID && o.ProductId == productID).SingleOrDefault();
 
@@ -40,6 +36,6 @@ namespace DataAccess
 
         public void UpdateOrderDetail(OrderDetail orderDetail) => base.UpdateEntity(orderDetail);
 
-
+        public IEnumerable<OrderDetail> GetOrderDetailByOrderID(int orderID) => salesManagementContext.OrderDetails.Where(o => o.OrderId == orderID).Include(o => o.Product).ToList();
     }
 }

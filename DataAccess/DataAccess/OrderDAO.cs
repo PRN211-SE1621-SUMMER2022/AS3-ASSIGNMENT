@@ -1,11 +1,6 @@
 ﻿using BusinessObject.Models;
 using DataAccess.Repository;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace DataAccess
 {
@@ -29,6 +24,10 @@ namespace DataAccess
                 return instance;
             }
         }
+        public IEnumerable<Order> GetList()
+        {
+            return salesManagementContext.Orders.Include(o => o.OrderDetails).Include(order => order.Member).ToList();
+        }
         public void DeleteOrder(Order order) => base.DeleteEntity(order);
 
         public Order GetOrderByID(int orderID) => base.GetEntityById(orderID);
@@ -44,7 +43,7 @@ namespace DataAccess
         => salesManagementContext.Orders.Where(o => o.MemberId == memberId).Include(o => o.OrderDetails);
 
         public IEnumerable<Order> FilterByDate(DateTime startDate, DateTime endate)
-    => salesManagementContext.Orders.Where(o => (o.OrderDate.Date.CompareTo(startDate.Date) >= 0 && o.OrderDate.Date.CompareTo(endate.Date) <= 0)).ToList().OrderByDescending(o => o.OrderDate);
+    => salesManagementContext.Orders.Where(o => (o.OrderDate.Value.CompareTo(startDate.Date) >= 0 && o.OrderDate.Value.CompareTo(endate.Date) <= 0)).ToList().OrderByDescending(o => o.OrderDate);
 
         public IEnumerable<Order> SortDescByDate()
             => salesManagementContext.Orders.ToList().OrderByDescending(o => o.OrderDate);

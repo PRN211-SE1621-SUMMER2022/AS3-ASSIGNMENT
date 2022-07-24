@@ -1,10 +1,5 @@
 ﻿using BusinessObject.Models;
 using DataAccess.Repository;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace DataAccess
 {
@@ -55,7 +50,7 @@ namespace DataAccess
                 try
                 {
                     return (IEnumerable<Product>)db.Set<Product>()
-                        .Where(p => p.UnitPrice<= unitprice).ToList();
+                        .Where(p => p.UnitPrice <= unitprice).ToList();
                 }
                 catch (Exception)
                 {
