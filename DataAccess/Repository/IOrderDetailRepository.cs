@@ -1,9 +1,4 @@
 ﻿using BusinessObject.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace DataAccess.Repository
 {
@@ -11,6 +6,7 @@ namespace DataAccess.Repository
     {
         IEnumerable<OrderDetail> GetAllOrderDetail(int OrderId);
         OrderDetail GetOrderDetailByID(int orderID, int productID);
+        IEnumerable<OrderDetail> GetOrderDetailByOrderID(int orderID);
         void InsertOrderDetail(OrderDetail orderDetail);
         void DeleteOrderDetail(OrderDetail orderDetail);
         void UpdateOrderDetail(OrderDetail orderDetail);

@@ -1,9 +1,4 @@
 ﻿using BusinessObject.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace DataAccess.Repository
 {
@@ -11,7 +6,7 @@ namespace DataAccess.Repository
     {
         public void DeleteOrder(Order order) => OrderDAO.Instance.DeleteOrder(order);
 
-        public IEnumerable<Order> GetAllOfMember(int memberId) => OrderDAO.Instance.GetAllOfMember(memberId);
+        public IEnumerable<Order> GetAllOfMember(int memberId) => OrderDAO.Instance.GetByMemberId(memberId);
 
         public IEnumerable<Order> GetAllOrder() => OrderDAO.Instance.GetAllOrder();
 
@@ -26,5 +21,7 @@ namespace DataAccess.Repository
         public IEnumerable<Order> FilterByDate(DateTime start, DateTime end) => OrderDAO.Instance.FilterByDate(start, end);
 
         public IEnumerable<Order> GetByMemberId(int memberId) => OrderDAO.Instance.GetByMemberId(memberId);
+
+        public IEnumerable<Order> GetList() => OrderDAO.Instance.GetList();
     }
 }
