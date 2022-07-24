@@ -1,6 +1,6 @@
 ﻿using BusinessObject.Models;
 using Nancy.Json;
-
+//DAO
 namespace DataAccess
 {
     public class MemberDAO : BaseDAO<Member>, IMemberRepository

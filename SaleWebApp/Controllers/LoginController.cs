@@ -3,7 +3,7 @@ using DataAccess;
 using DataAccess.Repository;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
-
+//login
 namespace SaleWebApp.Controllers
 {
     public class LoginController : Controller
