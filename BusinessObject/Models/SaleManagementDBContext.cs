@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata;
+﻿using Microsoft.EntityFrameworkCore;
 
 namespace BusinessObject.Models
 {
@@ -25,7 +22,7 @@ namespace BusinessObject.Models
         {
             if (!optionsBuilder.IsConfigured)
             {
-                optionsBuilder.UseSqlServer("server =(local); database = SaleManagementDB;uid=sa;pwd=12345;TrustServerCertificate=True");
+                optionsBuilder.UseSqlServer("Server=SE150222\\MSSQLSERVER2019Z;uid=sa;pwd=sa;database=SaleManagementDB;TrustServerCertificate=True;");
             }
         }
 
@@ -35,7 +32,7 @@ namespace BusinessObject.Models
             {
                 entity.ToTable("Member");
 
-                entity.Property(e => e.Id).ValueGeneratedNever();
+                entity.Property(e => e.Id).ValueGeneratedOnAdd();
 
                 entity.Property(e => e.City)
                     .HasMaxLength(15)
@@ -62,7 +59,7 @@ namespace BusinessObject.Models
             {
                 entity.ToTable("Order");
 
-                entity.Property(e => e.Id).ValueGeneratedNever();
+                entity.Property(e => e.Id).ValueGeneratedOnAdd();
 
                 entity.Property(e => e.Freight).HasColumnType("money");
 
@@ -104,7 +101,7 @@ namespace BusinessObject.Models
             {
                 entity.ToTable("Product");
 
-                entity.Property(e => e.Id).ValueGeneratedNever();
+                entity.Property(e => e.Id).ValueGeneratedOnAdd();
 
                 entity.Property(e => e.ProductName)
                     .HasMaxLength(40)
