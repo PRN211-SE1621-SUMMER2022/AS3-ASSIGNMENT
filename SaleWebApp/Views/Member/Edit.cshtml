@@ -1,10 +1,22 @@
 ﻿@model BusinessObject.Models.Member
+@using BusinessObject.Models
 
 @{
     ViewData["Title"] = "Edit";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
+@using BusinessObject.Utils
+@using Newtonsoft.Json;
+@using Microsoft.AspNetCore.Http;
 
+@{
+    var jsonFromUser = Context.Session.GetString("User");
+    Member member = null;
+    if (jsonFromUser != null)
+    {
+        member = JsonConvert.DeserializeObject<Member>(jsonFromUser);
+    }
+}
 <h1>Edit</h1>
 
 <h4>Member</h4>
@@ -51,7 +63,11 @@
 </div>
 
 <div>
-    <a asp-action="Index">Back to List</a>
+    @if (Helper.CheckRole(member) && member!= null)
+    {
+        <p>|</p>
+        <a asp-action="Index">Back to List</a>
+    }
 </div>
 
 @section Scripts {
