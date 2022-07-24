@@ -1,127 +1,258 @@
 ﻿using BusinessObject.Models;
+using DataAccess;
 using DataAccess.Repository;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using SaleWebApp.Filters;
+using System.Text.Json;
 
 namespace SaleWebApp.Controllers
 {
+    [AdminFilter]
     public class OrdersController : Controller
     {
-        // GET: OrdersController
-        IOrderRepository orderRepository = null;
-        public OrdersController() => orderRepository = new OrderRepository();
+        IOrderRepository orderRepository;
+        IOrderDetailRepository orderDetailRepository;
+        IProductRepository productRepository;
+        IMemberRepository memberRepository;
 
-        public ActionResult Index()
+        public OrdersController()
         {
-            var orderList = orderRepository.GetAllOrder();
-            return View(orderList);
-
+            orderRepository = new OrderRepository();
+            orderDetailRepository = new OrderDetailRepository();
+            productRepository = new ProductRepository();
+            memberRepository = new MemberRepository();
         }
-
-        // GET: OrdersController/Details/5
-        public ActionResult Details(int id)
+        [HttpGet]
+        public IActionResult Index()
         {
+            return View(orderRepository.GetList());
+        }
+        [HttpGet]
+        public IActionResult Details(int? id)
+        {
+            return View(orderRepository.GetOrderByID(id.Value));
+        }
+        [HttpGet]
+        public IActionResult AddProduct()
+        {
+            return View(productRepository.GetAllProduct());
+        }
+        [HttpPost]
+        public IActionResult AddToCart(int quantity, int productId, string discount)
+        {
+            try
+            {
+                if (GetCart() == null)
+                {
+                    HttpContext.Session.SetString("Cart", JsonSerializer.Serialize(new List<Cart>()));
+                }
+
+                List<Cart> cart = GetCart();
+
+                var product = productRepository.GetProductById(productId);
+                var productInCart = cart.Find(cartItem => cartItem.ProductId == productId);
+                if (product.UnitsInStock < quantity)
+                {
+                    throw new Exception("The unit in stock of product is less than quantity");
+                }
+
+                if (productInCart == null)
+                {
+                    cart.Add(new Cart
+                    {
+                        Quantity = quantity,
+                        CategoryId = product.CategoryId,
+                        ProductId = product.Id,
+                        UnitPrice = product.UnitPrice,
+                        ProductName = product.ProductName,
+                        Weight = product.Weight,
+                        Discount = double.Parse(discount)
+                    });
+                }
+                else
+                {
+                    productInCart.Quantity += quantity;
+                    productInCart.Discount = double.Parse(discount);
+                }
+                product.UnitsInStock -= quantity;
+                productRepository.UpdateProduct(product);
+                TempData["message"] = $"Added {product.ProductName} - Quantity: {quantity} successfully";
+                HttpContext.Session.SetString("Cart", JsonSerializer.Serialize(cart));
+            }
+            catch (Exception ex)
+            {
+                TempData["message"] = ex.Message;
+            }
+            return RedirectToAction(nameof(AddProduct));
+        }
+        [HttpGet]
+        public IActionResult Create()
+        {
+            var allMembers = memberRepository.GetAllMember().ToList();
+            TempData["allMembers"] = JsonSerializer.Serialize(allMembers);
             return View();
         }
-
-        // GET: OrdersController/Create
-        public ActionResult Create() => View();
-        
-
-        // POST: OrdersController/Create
         [HttpPost]
-        [ValidateAntiForgeryToken]
-        public ActionResult Create(Order order)
+        public IActionResult Create([Bind(nameof(Order.MemberId), nameof(Order.OrderDate), nameof(Order.RequiredDate), nameof(Order.ShippedDate), nameof(Order.Freight))] Order order, string action)
         {
+            if (!TryValidateModel(nameof(Order)))
+            {
+                return View();
+            }
             try
             {
-                if (ModelState.IsValid)
+                if (order != null && action.Equals("Create"))
                 {
                     orderRepository.InsertOrder(order);
+                    TempData.Clear();
+                    List<Cart> cart = GetCart();
+
+                    if (cart == null)
+                    {
+                        return RedirectToAction("Index");
+                    }
+
+                    foreach (Cart pr in cart)
+                    {
+                        HttpContext.Session.Remove("Cart");
+                        orderDetailRepository.InsertOrderDetail(new OrderDetail
+                        {
+                            OrderId = orderRepository.GetByMemberId((int)order.MemberId).Reverse().FirstOrDefault().Id,
+                            ProductId = pr.ProductId,
+                            Quantity = pr.Quantity,
+                            Discount = pr.Discount,
+                            UnitPrice = pr.UnitPrice
+                        });
+
+                    }
+
                 }
-                return RedirectToAction(nameof(Index));
+                else if (action.Equals("Add Product"))
+                {
+                    if (order != null)
+                    {
+                        TempData["memberId"] = order.MemberId;
+                        TempData["orderDate"] = order.OrderDate == null ? null : order.OrderDate.Value.ToString("yyyy-MM-dd");
+                        TempData["requiredDate"] = order.RequiredDate?.ToString("yyyy-MM-dd");
+                        TempData["shippedDate"] = order.ShippedDate == null ? null : order.ShippedDate.Value.ToString("yyyy-MM-dd");
+                        TempData["freight"] = order.Freight.ToString();
+                    }
+
+                    return RedirectToAction("AddProduct");
+                }
+                return RedirectToAction("Index");
             }
             catch (Exception ex)
             {
-                ViewBag.Message = ex.Message;
-                return View(order);
+                TempData["message"] = $"Error: {ex.Message}";
+                return RedirectToAction("Create");
             }
+
         }
 
-
-        // GET: OrdersController/Edit/5
-
-        public ActionResult Edit(int? id)
+        public ActionResult Update(int id)
         {
-            if (id != null)
-            {
-                return NotFound();
-            }
-            var order = orderRepository.GetOrderByID(id.Value);
-            if (order == null)
-            {
-                return NotFound();
-            }
-            return View(order);
+            var order = orderRepository.GetOrderByID(id);
+            var listOrderDetails = orderDetailRepository.GetOrderDetailByOrderID(id);
+            order.OrderDetails = (ICollection<OrderDetail>)listOrderDetails;
+            return View(orderRepository.GetOrderByID(id));
         }
-
-
-
-        // POST: OrdersController/Edit/5
         [HttpPost]
-        [ValidateAntiForgeryToken]
-        public ActionResult Edit(int id, Order order)
+        public ActionResult Update(int id, [Bind(nameof(Order.MemberId), nameof(Order.OrderDate), nameof(Order.RequiredDate), nameof(Order.ShippedDate), nameof(Order.Freight))] Order order)
         {
             try
             {
-                if (id != order.Id)
+                if (TryValidateModel(nameof(Order)))
                 {
-                    return NotFound();
+                    var orderUpdate = orderRepository.GetOrderByID(id);
+                    orderUpdate.MemberId = order.MemberId;
+                    orderUpdate.OrderDate = order.OrderDate;
+                    orderUpdate.RequiredDate = order.RequiredDate;
+                    orderUpdate.ShippedDate = order.ShippedDate;
+                    orderUpdate.Freight = order.Freight;
+                    orderRepository.UpdateOrder(orderUpdate);
+                    return RedirectToAction("Index");
                 }
-                if (ModelState.IsValid)
-                {
-                    orderRepository.UpdateOrder(order);
-                }
-                return RedirectToAction(nameof(Index));
+                return View(orderRepository.GetOrderByID(id));
             }
             catch (Exception ex)
             {
-                ViewBag.Message = ex.Message;
-                return View();
+                TempData["message"] = ex.Message;
+                return RedirectToAction("Update", routeValues: new { Id = id });
             }
-        }
 
-        // GET: OrdersController/Delete/5
-        public ActionResult Delete(int? id)
+        }
+        public IActionResult Delete(int id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
-            var order = orderRepository.GetOrderByID(id.Value);
-            if (order == null)
-            {
-                return NotFound();
-            }
-            return View(order);
+            var order = orderRepository.GetOrderByID(id);
+            var listOrderDetails = orderDetailRepository.GetOrderDetailByOrderID(id);
+            order.OrderDetails = (ICollection<OrderDetail>)listOrderDetails;
+            return View(orderRepository.GetOrderByID(id));
         }
-
-
-        // POST: OrdersController/Delete/5
         [HttpPost]
-        [ValidateAntiForgeryToken]
-        public ActionResult Delete(Order order)
+        public ActionResult Delete(int id, [Bind(nameof(Order.MemberId), nameof(Order.OrderDate), nameof(Order.RequiredDate), nameof(Order.ShippedDate), nameof(Order.Freight))] Order order)
         {
             try
             {
-                orderRepository.DeleteOrder(order);
-                return RedirectToAction(nameof(Index));
+                if (TryValidateModel(nameof(Order)))
+                {
+                    //orderRepository = new OrderRepository();
+                    var orderDelete = orderRepository.GetOrderByID(id);
+                    orderRepository.DeleteOrder(orderDelete);
+                    return RedirectToAction("Index");
+                }
+                return View(orderRepository.GetOrderByID(id));
             }
             catch (Exception ex)
             {
-                ViewBag.Message = ex.Message;
-                return View();
+                TempData["message"] = ex.Message;
+                return RedirectToAction("Delete", routeValues: new { Id = id });
             }
+        }
+        public IActionResult DeleteProduct(int id)
+        {
+            List<Cart> cart = GetCart();
+            var cartItem = cart.Where(item => item.ProductId == id).FirstOrDefault();
+            if (cartItem != null)
+            {
+                RemoveCartItemAndReserveQuantity(cartItem, cart);
+            }
+            return RedirectToAction("Create");
+        }
+        private void RemoveCartItemAndReserveQuantity(Cart cartItem, List<Cart> cart)
+        {
+            ReserveQuantityAfterDeleteItem(cartItem);
+            cart.Remove(cartItem);
+            SetCart(cart);
+        }
+        private void ReserveQuantityAfterDeleteItem(Cart cartItem)
+        {
+            var product = productRepository.GetProductById(cartItem.ProductId);
+            product.UnitsInStock += cartItem.Quantity;
+            productRepository.UpdateProduct(product);
+        }
+        public IActionResult ClearProduct()
+        {
+            var cart = GetCart();
+            if (cart != null)
+            {
+                foreach (Cart item in cart)
+                {
+                    ReserveQuantityAfterDeleteItem(item);
+                }
+            }
+            SetCart(new List<Cart>());
+            return RedirectToAction("Create");
+        }
+        private List<Cart> GetCart()
+        {
+            string get = HttpContext.Session.GetString("Cart");
+            if (get == null) return null;
+            return JsonSerializer.Deserialize<List<Cart>>(get);
+        }
+        private void SetCart(List<Cart> cart)
+        {
+            HttpContext.Session.SetString("Cart", JsonSerializer.Serialize(cart));
         }
     }
 }

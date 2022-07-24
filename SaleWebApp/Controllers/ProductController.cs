@@ -1,83 +1,150 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using BusinessObject.Models;
+using DataAccess.Repository;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore;
+using SaleWebApp.Filters;
+using BusinessObject;
+using DataAccess;
 
 namespace SaleWebApp.Controllers
 {
-    public class ProductController : Controller
+    [AdminFilter]
+    public class ProductsController : Controller
     {
-        // GET: ProductController
-        public ActionResult Index()
+        IProductRepository productRepository;
+        public ProductsController()
+        {
+            productRepository = new ProductRepository();
+        }
+
+        // GET: Products
+        public async Task<IActionResult> Index()
+        {
+            return View(productRepository.GetAllProduct());
+        }
+
+        // GET: Products/Details/5
+        public async Task<IActionResult> Details(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var product = productRepository.GetProductById((int)id);
+            if (product == null)
+            {
+                return NotFound();
+            }
+
+            return View(product);
+        }
+
+        // GET: Products/Create
+        public IActionResult Create()
         {
             return View();
         }
 
-        // GET: ProductController/Details/5
-        public ActionResult Details(int id)
-        {
-            return View();
-        }
-
-        // GET: ProductController/Create
-        public ActionResult Create()
-        {
-            return View();
-        }
-
-        // POST: ProductController/Create
+        // POST: Products/Create
+        // To protect from overposting attacks, enable the specific properties you want to bind to.
+        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Create(IFormCollection collection)
+        public async Task<IActionResult> Create([Bind("CategoryId,ProductName,Weight,UnitPrice,UnitsInStock")] Product product)
         {
-            try
+            if (ModelState.IsValid)
             {
+                productRepository.InsertProduct(product);
                 return RedirectToAction(nameof(Index));
             }
-            catch
-            {
-                return View();
-            }
+            return View(product);
         }
 
-        // GET: ProductController/Edit/5
-        public ActionResult Edit(int id)
+        // GET: Products/Edit/5
+        public async Task<IActionResult> Edit(int? id)
         {
-            return View();
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var product = productRepository.GetProductById((int)id);
+            if (product == null)
+            {
+                return NotFound();
+            }
+            return View(product);
         }
 
-        // POST: ProductController/Edit/5
+        // POST: Products/Edit/5
+        // To protect from overposting attacks, enable the specific properties you want to bind to.
+        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Edit(int id, IFormCollection collection)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,CategoryId,ProductName,Weight,UnitPrice,UnitsInStock")] Product product)
         {
-            try
+            if (id != product.Id)
             {
+                return NotFound();
+            }
+
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    productRepository.UpdateProduct(product);
+                }
+                catch (DbUpdateConcurrencyException)
+                {
+                    if (!ProductExists(product.Id))
+                    {
+                        return NotFound();
+                    }
+                    else
+                    {
+                        throw;
+                    }
+                }
                 return RedirectToAction(nameof(Index));
             }
-            catch
-            {
-                return View();
-            }
+            return View(product);
         }
 
-        // GET: ProductController/Delete/5
-        public ActionResult Delete(int id)
+        // GET: Products/Delete/5
+        public async Task<IActionResult> Delete(int? id)
         {
-            return View();
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var product = productRepository.GetProductById((int)id);
+            if (product == null)
+            {
+                return NotFound();
+            }
+
+            return View(product);
         }
 
-        // POST: ProductController/Delete/5
-        [HttpPost]
+        // POST: Products/Delete/5
+        [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
-        public ActionResult Delete(int id, IFormCollection collection)
+        public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            try
-            {
-                return RedirectToAction(nameof(Index));
-            }
-            catch
-            {
-                return View();
-            }
+            productRepository.RemoveProduct(productRepository.GetProductById(id));
+            return RedirectToAction(nameof(Index));
+        }
+
+        private bool ProductExists(int? id)
+        {
+            return productRepository.GetProductById((int)id) != null;
         }
     }
 }

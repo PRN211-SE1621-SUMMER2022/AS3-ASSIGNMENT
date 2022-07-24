@@ -1,8 +1,12 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using DataAccess.Repository;
+﻿using BusinessObject.Models;
+using BusinessObject.Utils;
 using DataAccess;
-using BusinessObject.Models;
+using DataAccess.Repository;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
+using SaleWebApp.Filters;
+
 namespace SaleWebApp.Controllers
 {
     public class MemberController : Controller
@@ -34,6 +38,7 @@ namespace SaleWebApp.Controllers
         }
 
         // GET: MemberController/Create
+        [AdminFilter]
         public ActionResult Create()
         {
 
@@ -43,6 +48,7 @@ namespace SaleWebApp.Controllers
         // POST: MemberController/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [AdminFilter]
         public ActionResult Create(Member member)
         {
             try
@@ -82,15 +88,52 @@ namespace SaleWebApp.Controllers
         {
             try
             {
+                if (id == null)
+                {
+                    return NotFound();
+                }
                 if (id != member.Id)
                 {
                     return NotFound();
                 }
+
                 if (ModelState.IsValid)
                 {
-                    memberRepository.UpdateMember(member);
+                    try
+                    {
+                        Member m = memberRepository.GetMemberByID(id);
+                        if (m != null)
+                        {
+                            m.Email = member.Email;
+                            m.City = member.City;
+                            m.CompanyName = member.CompanyName;
+                            m.Country = member.Country;
+                            if (member.Password != null && member.Password != "")
+                            {
+                                m.Password = member.Password;
+                            }
+                        }
+                        memberRepository.UpdateMember(m);
+                    }
+                    catch (DbUpdateConcurrencyException)
+                    {
+                    }
+                    string session = HttpContext.Session.GetString("User");
+                    if (session != null)
+                    {
+                        Member user = JsonConvert.DeserializeObject<Member>(session);
+                        if (Helper.CheckRole(user))
+                        {
+                            return RedirectToAction(nameof(Index));
+                        }
+                        else
+                        {
+                            return RedirectToAction(nameof(Details), routeValues: new { Id = user.Id });
+                        }
+                    }
+                    return RedirectToAction(nameof(Index));
                 }
-                return RedirectToAction(nameof(Index));
+                return View(member);
             }
             catch (Exception ex)
             {
@@ -101,6 +144,7 @@ namespace SaleWebApp.Controllers
         }
 
         // GET: MemberController/Delete/5
+        [AdminFilter]
         public ActionResult Delete(int? id)
         {
             if (id == null)
@@ -118,6 +162,7 @@ namespace SaleWebApp.Controllers
         // POST: MemberController/Delete/5
         [HttpPost]
         [ValidateAntiForgeryToken]
+
         public ActionResult Delete(Member member)
         {
             try
