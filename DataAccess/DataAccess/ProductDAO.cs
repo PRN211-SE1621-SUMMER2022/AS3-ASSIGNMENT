@@ -82,5 +82,7 @@ namespace DataAccess
         public void RemoveProduct(Product product) => base.DeleteEntity(product);
 
         public void UpdateProduct(Product product) => base.UpdateEntity(product);
+
+        
     }
 }
